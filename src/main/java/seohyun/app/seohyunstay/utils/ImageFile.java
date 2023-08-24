@@ -5,6 +5,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,5 +27,18 @@ public class ImageFile {
             list.add(uploadPath + savedFileName);
         }
         return list;
+    }
+
+    public void DeleteImage(String priorImage) throws Exception {
+        try{
+            if (priorImage != null) {
+                List<String> imageList = List.of(priorImage.split(","));
+                for (String eachImage : imageList) {
+                    Files.delete(Path.of(eachImage));
+                }
+            }
+        } catch (Exception e){
+            throw new Exception(e);
+        }
     }
 }

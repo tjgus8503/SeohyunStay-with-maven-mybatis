@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import seohyun.app.seohyunstay.mapper.HotelMapper;
-import seohyun.app.seohyunstay.model.Hotel;
+import seohyun.app.seohyunstay.mapper.RoomMapper;
+import seohyun.app.seohyunstay.model.Room;
 import seohyun.app.seohyunstay.utils.ImageFile;
 
 import java.util.HashMap;
@@ -16,25 +16,25 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class HotelService {
-    private final HotelMapper hotelMapper;
+public class RoomService {
+    private final RoomMapper roomMapper;
     private final ImageFile imageFile;
 
     @Transactional
-    public Map<String, String> CreateHotel(Hotel hotel, String userId, MultipartFile[] image) throws Exception {
+    public Map<String, String> CreateRoom(Room room, String userId, MultipartFile[] image) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             UUID uuid = UUID.randomUUID();
-            hotel.setId(uuid.toString());
-            hotel.setUserId(userId);
+            room.setId(uuid.toString());
+            room.setUserId(userId);
             if (image == null) {
-                hotel.setImageUrl(null);
+                room.setImageUrl(null);
             } else {
                 List<String> imageList = imageFile.CreateImage(image);
                 String multiImages = String.join(",", imageList);
-                hotel.setImageUrl(multiImages);
+                room.setImageUrl(multiImages);
             }
-            int result = hotelMapper.create(hotel);
+            int result = roomMapper.create(room);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -45,26 +45,26 @@ public class HotelService {
         }
     }
 
-    public Hotel GetHotel(String id) throws Exception {
+    public Room GetRoom(String id) throws Exception {
         try{
-            return hotelMapper.findOneById(id);
+            return roomMapper.findOneById(id);
         } catch (Exception e){
             throw new Exception(e);
         }
     }
 
     @Transactional
-    public Map<String, String> UpdateHotel(Hotel hotel, MultipartFile[] image) throws Exception {
+    public Map<String, String> UpdateRoom(Room room, MultipartFile[] image) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             if (image == null) {
-                hotel.setImageUrl(null);
+                room.setImageUrl(null);
             } else {
                 List<String> imageList = imageFile.CreateImage(image);
                 String multiImages = String.join(",", imageList);
-                hotel.setImageUrl(multiImages);
+                room.setImageUrl(multiImages);
             }
-            int result = hotelMapper.update(hotel);
+            int result = roomMapper.update(room);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -76,10 +76,10 @@ public class HotelService {
     }
 
     @Transactional
-    public Map<String, String> DeleteHotel(String id) throws Exception {
+    public Map<String, String> DeleteRoom(String id) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = hotelMapper.delete(id);
+            int result = roomMapper.delete(id);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -90,9 +90,10 @@ public class HotelService {
         }
     }
 
-    public List<Hotel> GetAllHotel() throws Exception {
+    @Transactional
+    public void DeleteRoomByHotelId(String hotelId) throws Exception {
         try{
-            return hotelMapper.findAll();
+            roomMapper.deleteByHotelId(hotelId);
         } catch (Exception e){
             throw new Exception(e);
         }

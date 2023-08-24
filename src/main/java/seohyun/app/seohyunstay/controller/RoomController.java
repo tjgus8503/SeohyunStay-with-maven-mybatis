@@ -5,41 +5,39 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import seohyun.app.seohyunstay.model.Hotel;
-import seohyun.app.seohyunstay.model.User;
+import seohyun.app.seohyunstay.model.*;
 import seohyun.app.seohyunstay.service.*;
 import seohyun.app.seohyunstay.utils.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1/hotel")
-public class HotelController {
-    private final HotelService hotelService;
-    private final UserService userService;
+@RequestMapping("/api/v1/room")
+public class RoomController {
     private final RoomService roomService;
+    private final UserService userService;
+    private final HotelService hotelService;
     private final Jwt jwt;
     private final ImageFile imageFile;
 
-    // 호텔 등록(파트너)
-    @PostMapping("/createhotel")
-    public ResponseEntity<Object> CreateHotel(
-            @RequestHeader String authorization, @ModelAttribute Hotel hotel,
+    // 방 등록(호텔을 등록한 파트너가 해당 호텔의 방을 등록할 수 있다.)
+    @PostMapping("/createroom")
+    public ResponseEntity<Object> CreateRoom(
+            @RequestHeader String authorization, @ModelAttribute Room room,
             @RequestPart(required = false) MultipartFile[] image
             ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
-            User userInfo = userService.findUserId(decoded);
-            if (userInfo.getRole() != 2) {
+            Hotel hotelInfo = hotelService.GetHotel(room.getHotelId());
+            if (!hotelInfo.getUserId().equals(decoded)) {
                 map.put("result", "failed 등록 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            Map<String, String> create = hotelService.CreateHotel(hotel, decoded, image);
+            Map<String, String> create = roomService.CreateRoom(room, decoded, image);
             return new ResponseEntity<>(create, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -48,26 +46,26 @@ public class HotelController {
         }
     }
 
-    // 호텔 수정(등록한 본인(파트너) or 관리자)
-    @PostMapping("/updatehotel")
-    public ResponseEntity<Object> UpdateHotel(
-            @RequestHeader String authorization, @ModelAttribute Hotel hotel,
+    // 방 수정(방 등록한 파트너 or 관리자)
+    @PostMapping("/updateroom")
+    public ResponseEntity<Object> UpdateRoom(
+            @RequestHeader String authorization, @ModelAttribute Room room,
             @RequestPart(required = false) MultipartFile[] image
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
-            Hotel hotelInfo = hotelService.GetHotel(hotel.getId());
+            Room roomInfo = roomService.GetRoom(room.getId());
             User userInfo = userService.findUserId(decoded);
-            if (!(hotelInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
+            if (!(roomInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
                 map.put("result", "failed 수정 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            Map<String, String> update = hotelService.UpdateHotel(hotel, image);
+            Map<String, String> update = roomService.UpdateRoom(room, image);
             new Thread() {
                 public void run() {
                     try{
-                        imageFile.DeleteImage(hotelInfo.getImageUrl());
+                        imageFile.DeleteImage(roomInfo.getImageUrl());
                     } catch (Exception e){
                         e.printStackTrace();
                     }
@@ -81,32 +79,30 @@ public class HotelController {
         }
     }
 
-    // 호텔 삭제 (등록한 본인(파트너) or 관리자)
-    @PostMapping("/deletehotel")
-    public ResponseEntity<Object> DeleteHotel(
+    // 방 삭제(방 등록한 파트너 or 관리자)
+    @PostMapping("/deleteroom")
+    public ResponseEntity<Object> DeleteRoom(
             @RequestHeader String authorization, @RequestParam String id
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
-            Hotel hotelInfo = hotelService.GetHotel(id);
+            Room roomInfo = roomService.GetRoom(id);
             User userInfo = userService.findUserId(decoded);
-            if (!(hotelInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
+            if (!(roomInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
                 map.put("result", "failed 삭제 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            Map<String, String> delete = hotelService.DeleteHotel(id);
+            Map<String, String> delete = roomService.DeleteRoom(id);
             new Thread() {
                 public void run() {
                     try{
-                        imageFile.DeleteImage(hotelInfo.getImageUrl());
+                        imageFile.DeleteImage(roomInfo.getImageUrl());
                     } catch (Exception e){
                         e.printStackTrace();
                     }
                 }
             }.start();
-            // 호텔 삭제 시 호텔 소속 방들도 모두 삭제.
-            roomService.DeleteRoomByHotelId(id);
             return new ResponseEntity<>(delete, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -114,19 +110,4 @@ public class HotelController {
             return new ResponseEntity<>(map, HttpStatus.OK);
         }
     }
-
-    // 호텔 전체 조회
-    @GetMapping("/getallhotel")
-    public ResponseEntity<Object> GetAllHotel() throws Exception {
-        try{
-            List<Hotel> hotelList = hotelService.GetAllHotel();
-            return new ResponseEntity<>(hotelList, HttpStatus.OK);
-        } catch (Exception e){
-            Map<String, String> map = new HashMap<>();
-            map.put("error", e.toString());
-            return new ResponseEntity<>(map, HttpStatus.OK);
-        }
-    }
-
-    // 호텔 상세 조회
 }
