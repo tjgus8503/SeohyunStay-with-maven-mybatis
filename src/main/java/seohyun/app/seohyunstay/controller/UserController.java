@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import seohyun.app.seohyunstay.model.PartnerReq;
 import seohyun.app.seohyunstay.model.User;
 import seohyun.app.seohyunstay.service.UserService;
 import seohyun.app.seohyunstay.utils.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -111,16 +113,10 @@ public class UserController {
                 map.put("result", "failed 비밀번호가 일치하지 않습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            User user = new User();
+
             String hashPassword = bcrypt.HashPassword(req.get("newPassword"));
-            user.setId(userInfo.getId());
-            user.setUserId(userInfo.getUserId());
-            user.setPassword(hashPassword);
-            user.setUsername(userInfo.getUsername());
-            user.setEmail(userInfo.getEmail());
-            user.setPhone(userInfo.getPhone());
-            user.setRole(userInfo.getRole());
-            Map<String, String> updatePassword = userService.UpdatePassword(user);
+            userInfo.setPassword(hashPassword);
+            Map<String, String> updatePassword = userService.UpdatePassword(userInfo);
             return new ResponseEntity<>(updatePassword, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -139,6 +135,77 @@ public class UserController {
             String decoded = jwt.VerifyToken(authorization);
             User userInfo = userService.findUserId(decoded);
             return new ResponseEntity<>(userInfo, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 파트너 등록 신청
+    @PostMapping("/createpartnerreq")
+    public ResponseEntity<Object> CreatePartnerReq(
+            @RequestHeader String authorization
+            ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            User userInfo = userService.findUserId(decoded);
+            if (userInfo.getRole() != 1) {
+                map.put("result", "failed 신청 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            Map<String, String> partnerReq = userService.CreatePartnerReq(decoded);
+            return new ResponseEntity<>(partnerReq, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 파트너 등록 신청 삭제
+
+    // 파트너 신청 수락 (role = 3(관리자)만 수락 가능.)
+    @PostMapping("/acceptpartner")
+    public ResponseEntity<Object> AcceptPartner(
+            @RequestHeader String authorization, @RequestBody PartnerReq partnerReq
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            User findUserId = userService.findUserId(decoded);
+            if (findUserId.getRole() != 3) {
+                map.put("result", "failed 수락 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            User userInfo = userService.findUserId(partnerReq.getUserId());
+            Map<String, String> updateRole = userService.AcceptPartner(userInfo);
+            userService.DeletePartnerReq(partnerReq);
+            return new ResponseEntity<>(updateRole, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 파트너 신청 목록 조회(관리자)
+    // todo 페이지네이션
+    @GetMapping("/getallpartnerreq")
+    public ResponseEntity<Object> GetAllPartnerReq(
+            @RequestHeader String authorization
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            User userInfo = userService.findUserId(decoded);
+            if (userInfo.getRole() != 3) {
+                map.put("result", "failed 조회 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            List<PartnerReq> partnerReqList = userService.GetAllPartnerReq();
+            return new ResponseEntity<>(partnerReqList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());
