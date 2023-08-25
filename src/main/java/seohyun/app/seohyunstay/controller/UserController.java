@@ -76,7 +76,7 @@ public class UserController {
     }
 
     // 회원탈퇴
-    // 비밀번호 확인 후 탈퇴 완료.
+    // 비밀번호 한번더 확인 후 탈퇴 완료.
     @PostMapping("/unregister")
     public ResponseEntity<Object> UnRegister(
             @RequestHeader String authorization, @RequestBody User user
@@ -142,7 +142,7 @@ public class UserController {
         }
     }
 
-    // 파트너 등록 신청
+    // 파트너 등록 신청(일반 유저(role=1)만 신청할 수 있다.)
     @PostMapping("/createpartnerreq")
     public ResponseEntity<Object> CreatePartnerReq(
             @RequestHeader String authorization
@@ -164,9 +164,7 @@ public class UserController {
         }
     }
 
-    // 파트너 등록 신청 삭제
-
-    // 파트너 신청 수락 (role = 3(관리자)만 수락 가능.)
+    // 파트너 신청 수락(관리자(role=3)만 수락할 수 있다.)
     @PostMapping("/acceptpartner")
     public ResponseEntity<Object> AcceptPartner(
             @RequestHeader String authorization, @RequestBody PartnerReq partnerReq
@@ -181,6 +179,7 @@ public class UserController {
             }
             User userInfo = userService.findUserId(partnerReq.getUserId());
             Map<String, String> updateRole = userService.AcceptPartner(userInfo);
+            // 수락 완료 시, 파트너 신청 목록에서 해당 신청 건은 삭제.
             userService.DeletePartnerReq(partnerReq);
             return new ResponseEntity<>(updateRole, HttpStatus.OK);
         } catch (Exception e){
@@ -190,8 +189,8 @@ public class UserController {
         }
     }
 
-    // 파트너 신청 목록 조회(관리자)
-    // todo 페이지네이션
+    // 파트너 신청목록 조회(관리자(role=3)만 조회할 수 있다.)
+    // todo pagination
     @GetMapping("/getallpartnerreq")
     public ResponseEntity<Object> GetAllPartnerReq(
             @RequestHeader String authorization

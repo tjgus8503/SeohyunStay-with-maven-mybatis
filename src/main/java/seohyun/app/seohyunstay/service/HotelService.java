@@ -97,4 +97,12 @@ public class HotelService {
             throw new Exception(e);
         }
     }
+
+    public Map<String, Object> HotelDetailPage(String id) throws Exception {
+        try{
+            return hotelMapper.getHotelWithRoomCount(id);
+        } catch (Exception e){
+            throw new Exception(e);
+        }
+    }
 }

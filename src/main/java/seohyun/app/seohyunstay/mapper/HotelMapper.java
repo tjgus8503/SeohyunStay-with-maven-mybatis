@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import seohyun.app.seohyunstay.model.Hotel;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface HotelMapper {
@@ -23,4 +24,7 @@ public interface HotelMapper {
 
     @Select("select * from hotel")
     List<Hotel> findAll();
+
+    @Select("select h.*, count(r.id) room_count from hotel h left join room r on h.id = r.hotelId where h.id = #{id} group by h.id")
+    Map<String, Object> getHotelWithRoomCount(String id);
 }

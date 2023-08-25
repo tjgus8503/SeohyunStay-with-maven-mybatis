@@ -23,7 +23,7 @@ public class RoomController {
     private final Jwt jwt;
     private final ImageFile imageFile;
 
-    // 방 등록(호텔을 등록한 파트너가 해당 호텔의 방을 등록할 수 있다.)
+    // 방 등록(소속된 호텔을 등록한 파트너만 방을 등록할 수 있다.)
     @PostMapping("/createroom")
     public ResponseEntity<Object> CreateRoom(
             @RequestHeader String authorization, @ModelAttribute Room room,
@@ -46,7 +46,7 @@ public class RoomController {
         }
     }
 
-    // 방 수정(방 등록한 파트너 or 관리자)
+    // 방 수정(방을 등록한 파트너 본인 또는 관리자(role=3)만 수정할 수 있다.)
     @PostMapping("/updateroom")
     public ResponseEntity<Object> UpdateRoom(
             @RequestHeader String authorization, @ModelAttribute Room room,
@@ -79,7 +79,7 @@ public class RoomController {
         }
     }
 
-    // 방 삭제(방 등록한 파트너 or 관리자)
+    // 방 삭제(방을 등록한 파트너 본인 회또는 관리자(role=3)만 삭제할 수 있다.)
     @PostMapping("/deleteroom")
     public ResponseEntity<Object> DeleteRoom(
             @RequestHeader String authorization, @RequestParam String id
@@ -104,6 +104,19 @@ public class RoomController {
                 }
             }.start();
             return new ResponseEntity<>(delete, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 방 상세페이지
+    @GetMapping("/roomdetailpage")
+    public ResponseEntity<Object> RoomDetailPage(@RequestParam String id) throws Exception {
+        try{
+            Room roomDetailPage = roomService.GetRoom(id);
+            return new ResponseEntity<>(roomDetailPage, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());

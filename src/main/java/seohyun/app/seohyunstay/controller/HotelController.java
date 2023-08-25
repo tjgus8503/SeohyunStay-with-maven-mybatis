@@ -25,7 +25,7 @@ public class HotelController {
     private final Jwt jwt;
     private final ImageFile imageFile;
 
-    // 호텔 등록(파트너)
+    // 호텔 등록(파트너(role=2)만 호텔을 등록할 수 있다.)
     @PostMapping("/createhotel")
     public ResponseEntity<Object> CreateHotel(
             @RequestHeader String authorization, @ModelAttribute Hotel hotel,
@@ -48,7 +48,7 @@ public class HotelController {
         }
     }
 
-    // 호텔 수정(등록한 본인(파트너) or 관리자)
+    // 호텔 수정(호텔을 등록한 파트너 본인 또는 관리자(role=3)만 수정할 수 있다.)
     @PostMapping("/updatehotel")
     public ResponseEntity<Object> UpdateHotel(
             @RequestHeader String authorization, @ModelAttribute Hotel hotel,
@@ -81,7 +81,7 @@ public class HotelController {
         }
     }
 
-    // 호텔 삭제 (등록한 본인(파트너) or 관리자)
+    // 호텔 삭제(호텔을 등록한 파트너 본인 또는 관리자(role=3)만 삭제할 수 있다.)
     @PostMapping("/deletehotel")
     public ResponseEntity<Object> DeleteHotel(
             @RequestHeader String authorization, @RequestParam String id
@@ -105,7 +105,7 @@ public class HotelController {
                     }
                 }
             }.start();
-            // 호텔 삭제 시 호텔 소속 방들도 모두 삭제.
+            // 호텔 삭제 시, 해당 호텔에 소속된 방들도 모두 삭제.
             roomService.DeleteRoomByHotelId(id);
             return new ResponseEntity<>(delete, HttpStatus.OK);
         } catch (Exception e){
@@ -115,7 +115,8 @@ public class HotelController {
         }
     }
 
-    // 호텔 전체 조회
+    // 호텔 리스트 전체 조회
+    // todo pagination
     @GetMapping("/getallhotel")
     public ResponseEntity<Object> GetAllHotel() throws Exception {
         try{
@@ -128,5 +129,16 @@ public class HotelController {
         }
     }
 
-    // 호텔 상세 조회
+    // 호텔 상세페이지 (with 방 개수)
+    @GetMapping("/hoteldetailpage")
+    public ResponseEntity<Object> HotelDetailPage(@RequestParam String id) throws Exception {
+        try{
+            Map<String, Object> hotelWithRoomCount = hotelService.HotelDetailPage(id);
+            return new ResponseEntity<>(hotelWithRoomCount, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
 }
