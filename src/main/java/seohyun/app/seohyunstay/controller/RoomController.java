@@ -10,6 +10,7 @@ import seohyun.app.seohyunstay.service.*;
 import seohyun.app.seohyunstay.utils.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -79,7 +80,7 @@ public class RoomController {
         }
     }
 
-    // 방 삭제(방을 등록한 파트너 본인 회또는 관리자(role=3)만 삭제할 수 있다.)
+    // 방 삭제(방을 등록한 파트너 본인 또는 관리자(role=3)만 삭제할 수 있다.)
     @PostMapping("/deleteroom")
     public ResponseEntity<Object> DeleteRoom(
             @RequestHeader String authorization, @RequestParam String id
@@ -117,6 +118,133 @@ public class RoomController {
         try{
             Room roomDetailPage = roomService.GetRoom(id);
             return new ResponseEntity<>(roomDetailPage, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 방 예약
+    @PostMapping("/createreservation")
+    public ResponseEntity<Object> CreateReservation(
+            @RequestHeader String authorization, @RequestBody Reservation reservation
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            Room roomInfo = roomService.GetRoom(reservation.getRoomId());
+            if (roomInfo.getCount() == 0 || roomInfo.getCount() < reservation.getCount()) {
+                map.put("result", "failed 재고가 부족합니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            roomService.UpdateCount(reservation);
+            Map<String, String> create = roomService.CreateReservation(reservation, decoded);
+            return new ResponseEntity<>(create, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 방 예약 취소
+    @PostMapping("/deletereservation")
+    public ResponseEntity<Object> DeleteReservation(
+            @RequestHeader String authorization, @RequestParam String id
+    ) throws Exception {
+        try{
+            String decoded = jwt.VerifyToken(authorization);
+            Reservation reservationInfo = roomService.GetReservation(id);
+            Map<String, String> delete = roomService.DeleteReservation(id, decoded);
+            roomService.AddCount(reservationInfo);
+            return new ResponseEntity<>(delete, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 예약 목록 조회(마이페이지)
+    // todo pagination
+    @GetMapping("/getmyreservation")
+    public ResponseEntity<Object> GetMyReservation(
+            @RequestHeader String authorization
+    ) throws Exception {
+        try{
+            String decoded = jwt.VerifyToken(authorization);
+            List<Reservation> myReservationList = roomService.GetMyReservation(decoded);
+            return new ResponseEntity<>(myReservationList, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 호텔 별 예약 목록 조회(호텔을 등록한 파트너 본인 또는 관리자(role=3)만 조회할 수 있다.)
+    // todo pagination
+    @GetMapping("/getallreservationbyhotel")
+    public ResponseEntity<Object> GetAllReservationByHotel(
+            @RequestHeader String authorization, @RequestParam String hotelId
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            Hotel hotelInfo = hotelService.GetHotel(hotelId);
+            User userInfo = userService.findUserId(decoded);
+            if (!(hotelInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
+                map.put("result", "failed 조회 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            List<Reservation> reservationList = roomService.GetAllReservationByHotel(hotelId);
+            return new ResponseEntity<>(reservationList, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 체크인(예약한 본인)
+    @PostMapping("/checkin")
+    public ResponseEntity<Object> Checkin(
+            @RequestHeader String authorization, @RequestParam String id
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            Reservation reservationInfo = roomService.GetReservation(id);
+            if (!reservationInfo.getUserId().equals(decoded)) {
+                map.put("result", "failed 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            Map<String, String> checkin = roomService.Checkin(id, decoded);
+            return new ResponseEntity<>(checkin, HttpStatus.OK);
+        } catch (Exception e){
+            Map<String, String> map = new HashMap<>();
+            map.put("error", e.toString());
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        }
+    }
+
+    // 체크아웃(예약한 본인)
+    @PostMapping("/checkout")
+    public ResponseEntity<Object> Checkout(
+            @RequestHeader String authorization, @RequestParam String id
+    ) throws Exception {
+        try{
+            Map<String, String> map = new HashMap<>();
+            String decoded = jwt.VerifyToken(authorization);
+            Reservation reservationInfo = roomService.GetReservation(id);
+            if (!reservationInfo.getUserId().equals(decoded)) {
+                map.put("result", "failed 권한이 없습니다.");
+                return new ResponseEntity<>(map, HttpStatus.OK);
+            }
+            Map<String, String> checkout = roomService.Checkout(id, decoded);
+            roomService.AddCount(reservationInfo);
+            return new ResponseEntity<>(checkout, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());
