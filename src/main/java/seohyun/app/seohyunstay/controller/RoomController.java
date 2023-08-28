@@ -219,13 +219,7 @@ public class RoomController {
             @RequestHeader String authorization, @RequestParam String id
     ) throws Exception {
         try{
-            Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
-            Reservation reservationInfo = roomService.GetReservation(id);
-            if (!reservationInfo.getUserId().equals(decoded)) {
-                map.put("result", "failed 권한이 없습니다.");
-                return new ResponseEntity<>(map, HttpStatus.OK);
-            }
             Map<String, String> checkin = roomService.Checkin(id, decoded);
             return new ResponseEntity<>(checkin, HttpStatus.OK);
         } catch (Exception e){
@@ -241,13 +235,8 @@ public class RoomController {
             @RequestHeader String authorization, @RequestParam String id
     ) throws Exception {
         try{
-            Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
             Reservation reservationInfo = roomService.GetReservation(id);
-            if (!reservationInfo.getUserId().equals(decoded)) {
-                map.put("result", "failed 권한이 없습니다.");
-                return new ResponseEntity<>(map, HttpStatus.OK);
-            }
             Map<String, String> checkout = roomService.Checkout(id, decoded);
             roomService.AddCount(reservationInfo);
             return new ResponseEntity<>(checkout, HttpStatus.OK);

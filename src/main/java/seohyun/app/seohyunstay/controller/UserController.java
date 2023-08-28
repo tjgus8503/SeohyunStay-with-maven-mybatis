@@ -65,7 +65,6 @@ public class UserController {
     ) throws Exception {
         try{
             String decoded = jwt.VerifyToken(authorization);
-
             Map<String, String> update = userService.UpdateUser(user, decoded);
             return new ResponseEntity<>(update, HttpStatus.OK);
         } catch (Exception e){
@@ -131,7 +130,6 @@ public class UserController {
             @RequestHeader String authorization
     ) throws Exception {
         try{
-            Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
             User userInfo = userService.findUserId(decoded);
             return new ResponseEntity<>(userInfo, HttpStatus.OK);
