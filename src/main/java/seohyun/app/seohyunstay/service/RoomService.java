@@ -165,17 +165,17 @@ public class RoomService {
         }
     }
 
-    public List<Reservation> GetMyReservation(String userId) throws Exception {
+    public List<Reservation> GetMyReservation(String userId, Integer offset) throws Exception {
         try{
-            return reservationMapper.findByUserId(userId);
+            return reservationMapper.findByUserId(userId, offset);
         } catch (Exception e){
             throw new Exception(e);
         }
     }
 
-    public List<Reservation> GetAllReservationByHotel(String hotelId) throws Exception {
+    public List<Reservation> GetAllReservationByHotel(String hotelId, Integer offset) throws Exception {
         try{
-            return reservationMapper.findByHotelId(hotelId);
+            return reservationMapper.findByHotelId(hotelId, offset);
         } catch (Exception e){
             throw new Exception(e);
         }

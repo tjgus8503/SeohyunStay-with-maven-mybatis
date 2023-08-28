@@ -167,14 +167,17 @@ public class RoomController {
     }
 
     // 예약 목록 조회(마이페이지)
-    // todo pagination
     @GetMapping("/getmyreservation")
     public ResponseEntity<Object> GetMyReservation(
-            @RequestHeader String authorization
+            @RequestHeader String authorization, @RequestParam Integer pageNumber
     ) throws Exception {
         try{
             String decoded = jwt.VerifyToken(authorization);
-            List<Reservation> myReservationList = roomService.GetMyReservation(decoded);
+            Integer offset = 0;
+            if (pageNumber > 1) {
+                offset = (pageNumber - 1);
+            }
+            List<Reservation> myReservationList = roomService.GetMyReservation(decoded, offset);
             return new ResponseEntity<>(myReservationList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -184,10 +187,9 @@ public class RoomController {
     }
 
     // 호텔 별 예약 목록 조회(호텔을 등록한 파트너 본인 또는 관리자(role=3)만 조회할 수 있다.)
-    // todo pagination
     @GetMapping("/getallreservationbyhotel")
     public ResponseEntity<Object> GetAllReservationByHotel(
-            @RequestHeader String authorization, @RequestParam String hotelId
+            @RequestHeader String authorization, @RequestParam String hotelId, @RequestParam Integer pageNumber
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
@@ -198,7 +200,11 @@ public class RoomController {
                 map.put("result", "failed 조회 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            List<Reservation> reservationList = roomService.GetAllReservationByHotel(hotelId);
+            Integer offset = 0;
+            if (pageNumber > 1) {
+                offset = (pageNumber - 1);
+            }
+            List<Reservation> reservationList = roomService.GetAllReservationByHotel(hotelId, offset);
             return new ResponseEntity<>(reservationList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();

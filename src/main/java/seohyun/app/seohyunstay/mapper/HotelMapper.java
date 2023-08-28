@@ -22,9 +22,9 @@ public interface HotelMapper {
     @Delete("delete from hotel where id = #{id}")
     int delete(String id);
 
-    @Select("select * from hotel")
-    List<Hotel> findAll();
+    @Select("select * from hotel order by createdAt desc limit 20 offset #{offset}")
+    List<Hotel> findAll(Integer offset);
 
-    @Select("select h.*, count(r.id) room_count from hotel h left join room r on h.id = r.hotelId where h.id = #{id} group by h.id")
+    @Select("select h.*, count(r.id) room_count from hotel h inner join room r on h.id = r.hotelId where h.id = #{id} group by h.id")
     Map<String, Object> getHotelWithRoomCount(String id);
 }

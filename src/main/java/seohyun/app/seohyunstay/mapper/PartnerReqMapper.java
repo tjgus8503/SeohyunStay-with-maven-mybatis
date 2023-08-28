@@ -17,6 +17,6 @@ public interface PartnerReqMapper {
     @Delete("delete from partnerReq where id = #{id} and userId = #{userId}")
     int delete(PartnerReq partnerReq);
 
-    @Select("select * from partnerReq")
-    List<PartnerReq> findAll();
+    @Select("select * from partnerReq order by createdAt desc limit 20 offset #{offset}")
+    List<PartnerReq> findAll(Integer offset);
 }

@@ -155,9 +155,9 @@ public class UserService {
         }
     }
 
-    public List<PartnerReq> GetAllPartnerReq() throws Exception {
+    public List<PartnerReq> GetAllPartnerReq(Integer offset) throws Exception {
         try{
-            return partnerReqMapper.findAll();
+            return partnerReqMapper.findAll(offset);
         } catch (Exception e){
             throw new Exception(e);
         }

@@ -90,9 +90,9 @@ public class HotelService {
         }
     }
 
-    public List<Hotel> GetAllHotel() throws Exception {
+    public List<Hotel> GetAllHotel(Integer offset) throws Exception {
         try{
-            return hotelMapper.findAll();
+            return hotelMapper.findAll(offset);
         } catch (Exception e){
             throw new Exception(e);
         }

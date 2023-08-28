@@ -116,11 +116,16 @@ public class HotelController {
     }
 
     // 호텔 리스트 전체 조회
-    // todo pagination
     @GetMapping("/getallhotel")
-    public ResponseEntity<Object> GetAllHotel() throws Exception {
+    public ResponseEntity<Object> GetAllHotel(
+            @RequestParam Integer pageNumber
+    ) throws Exception {
         try{
-            List<Hotel> hotelList = hotelService.GetAllHotel();
+            Integer offset = 0;
+            if (pageNumber > 1) {
+                offset = 20 * (pageNumber - 1);
+            }
+            List<Hotel> hotelList = hotelService.GetAllHotel(offset);
             return new ResponseEntity<>(hotelList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();

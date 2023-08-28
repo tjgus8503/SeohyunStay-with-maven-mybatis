@@ -190,10 +190,9 @@ public class UserController {
     }
 
     // 파트너 신청목록 조회(관리자(role=3)만 조회할 수 있다.)
-    // todo pagination
     @GetMapping("/getallpartnerreq")
     public ResponseEntity<Object> GetAllPartnerReq(
-            @RequestHeader String authorization
+            @RequestHeader String authorization, @RequestParam Integer pageNumber
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
@@ -203,7 +202,11 @@ public class UserController {
                 map.put("result", "failed 조회 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            List<PartnerReq> partnerReqList = userService.GetAllPartnerReq();
+            Integer offset = 0;
+            if (pageNumber > 1) {
+                offset = 20 * (pageNumber - 1);
+            }
+            List<PartnerReq> partnerReqList = userService.GetAllPartnerReq(offset);
             return new ResponseEntity<>(partnerReqList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
