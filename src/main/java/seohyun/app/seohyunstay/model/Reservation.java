@@ -20,4 +20,5 @@ public class Reservation {
     private Long count;
     private LocalDateTime checkin;
     private LocalDateTime checkout;
+    private Long price;
 }

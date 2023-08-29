@@ -9,6 +9,8 @@ import seohyun.app.seohyunstay.model.*;
 import seohyun.app.seohyunstay.service.*;
 import seohyun.app.seohyunstay.utils.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,7 +222,15 @@ public class RoomController {
     ) throws Exception {
         try{
             String decoded = jwt.VerifyToken(authorization);
-            Map<String, String> checkin = roomService.Checkin(id, decoded);
+            Reservation reservationInfo = roomService.GetReservation(id);
+            Room roomInfo = roomService.GetRoom(reservationInfo.getRoomId());
+            // 방 가격 계산
+            LocalDateTime startedAt = reservationInfo.getStartedAt().atStartOfDay();
+            LocalDateTime endedAt = reservationInfo.getEndedAt().atStartOfDay();
+            int lengthOfStay = (int) Duration.between(startedAt, endedAt).toDays();
+            Long price = lengthOfStay * roomInfo.getPrice() * reservationInfo.getCount();
+
+            Map<String, String> checkin = roomService.Checkin(id, decoded, price);
             return new ResponseEntity<>(checkin, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -246,4 +256,5 @@ public class RoomController {
             return new ResponseEntity<>(map, HttpStatus.OK);
         }
     }
+
 }

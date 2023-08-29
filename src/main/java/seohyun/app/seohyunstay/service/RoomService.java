@@ -182,10 +182,10 @@ public class RoomService {
     }
 
     @Transactional
-    public Map<String, String> Checkin(String id, String userId) throws Exception {
+    public Map<String, String> Checkin(String id, String userId, Long price) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = reservationMapper.checkin(id, userId);
+            int result = reservationMapper.checkin(id, userId, price);
             if (result == 0) {
                 throw new Exception("failed");
             }
