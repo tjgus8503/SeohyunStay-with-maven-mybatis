@@ -7,7 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PartnerReq {
+public class PartnerAccount {
     private String id;
     private String userId;
+    private String username;
+    private String email;
+    private String phone;
+    private Integer role;
 }

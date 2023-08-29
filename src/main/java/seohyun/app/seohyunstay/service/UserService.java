@@ -17,7 +17,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class UserService {
     private final UserMapper userMapper;
-    private final PartnerReqMapper partnerReqMapper;
+    private final PartnerAccountMapper partnerAccountMapper;
     private final Bcrypt bcrypt;
 
     @Transactional
@@ -110,14 +110,18 @@ public class UserService {
     }
 
     @Transactional
-    public Map<String, String> CreatePartnerReq(String userId) throws Exception {
+    public Map<String, String> CreatePartnerAccount(User userInfo) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            PartnerReq partnerReq = new PartnerReq();
+            PartnerAccount partnerAccount = new PartnerAccount();
             UUID uuid = UUID.randomUUID();
-            partnerReq.setId(uuid.toString());
-            partnerReq.setUserId(userId);
-            int result = partnerReqMapper.create(partnerReq);
+            partnerAccount.setId(uuid.toString());
+            partnerAccount.setUserId(userInfo.getUserId());
+            partnerAccount.setUsername(userInfo.getUsername());
+            partnerAccount.setEmail(userInfo.getEmail());
+            partnerAccount.setPhone(userInfo.getPhone());
+            partnerAccount.setRole(userInfo.getRole());
+            int result = partnerAccountMapper.create(partnerAccount);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -129,10 +133,10 @@ public class UserService {
     }
 
     @Transactional
-    public Map<String, String> AcceptPartner(User user) throws Exception {
+    public Map<String, String> AcceptPartner(PartnerAccount partnerAccount) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = userMapper.updateRole(user);
+            int result = userMapper.updateRole(partnerAccount);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -144,9 +148,9 @@ public class UserService {
     }
 
     @Transactional
-    public void DeletePartnerReq(PartnerReq partnerReq) throws Exception {
+    public void DeletePartnerAccount(PartnerAccount partnerAccount) throws Exception {
         try{
-            int result = partnerReqMapper.delete(partnerReq);
+            int result = partnerAccountMapper.delete(partnerAccount);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -155,9 +159,9 @@ public class UserService {
         }
     }
 
-    public List<PartnerReq> GetAllPartnerReq(Integer offset) throws Exception {
+    public List<PartnerAccount> GetAllPartnerAccount(Integer offset) throws Exception {
         try{
-            return partnerReqMapper.findAll(offset);
+            return partnerAccountMapper.findAll(offset);
         } catch (Exception e){
             throw new Exception(e);
         }

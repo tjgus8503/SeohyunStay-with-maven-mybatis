@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import seohyun.app.seohyunstay.model.PartnerReq;
+import seohyun.app.seohyunstay.model.PartnerAccount;
 import seohyun.app.seohyunstay.model.User;
 import seohyun.app.seohyunstay.service.UserService;
 import seohyun.app.seohyunstay.utils.*;
@@ -48,7 +48,6 @@ public class UserController {
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
             String authorization = jwt.CreateToken(user.getUserId());
-            map.put("result", "success 로그인 성공.");
             map.put("authorization", authorization);
             return new ResponseEntity<>(map, HttpStatus.OK);
         } catch (Exception e){
@@ -141,8 +140,8 @@ public class UserController {
     }
 
     // 파트너 등록 신청(일반 유저(role=1)만 신청할 수 있다.)
-    @PostMapping("/createpartnerreq")
-    public ResponseEntity<Object> CreatePartnerReq(
+    @PostMapping("/createpartneraccount")
+    public ResponseEntity<Object> CreatePartnerAccount(
             @RequestHeader String authorization
             ) throws Exception {
         try{
@@ -153,8 +152,8 @@ public class UserController {
                 map.put("result", "failed 신청 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            Map<String, String> partnerReq = userService.CreatePartnerReq(decoded);
-            return new ResponseEntity<>(partnerReq, HttpStatus.OK);
+            Map<String, String> createPA = userService.CreatePartnerAccount(userInfo);
+            return new ResponseEntity<>(createPA, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());
@@ -165,7 +164,7 @@ public class UserController {
     // 파트너 신청 수락(관리자(role=3)만 수락할 수 있다.)
     @PostMapping("/acceptpartner")
     public ResponseEntity<Object> AcceptPartner(
-            @RequestHeader String authorization, @RequestBody PartnerReq partnerReq
+            @RequestHeader String authorization, @RequestBody PartnerAccount partnerAccount
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
@@ -175,10 +174,9 @@ public class UserController {
                 map.put("result", "failed 수락 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            User userInfo = userService.findUserId(partnerReq.getUserId());
-            Map<String, String> updateRole = userService.AcceptPartner(userInfo);
+            Map<String, String> updateRole = userService.AcceptPartner(partnerAccount);
             // 수락 완료 시, 파트너 신청 목록에서 해당 신청 건은 삭제.
-            userService.DeletePartnerReq(partnerReq);
+            userService.DeletePartnerAccount(partnerAccount);
             return new ResponseEntity<>(updateRole, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -188,9 +186,9 @@ public class UserController {
     }
 
     // 파트너 신청목록 조회(관리자(role=3)만 조회할 수 있다.)
-    @GetMapping("/getallpartnerreq")
-    public ResponseEntity<Object> GetAllPartnerReq(
-            @RequestHeader String authorization, @RequestParam Integer pageNumber
+    @GetMapping("/getallpartneraccount")
+    public ResponseEntity<Object> GetAllPartnerAccount(
+            @RequestHeader String authorization, @RequestParam Integer page
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
@@ -201,11 +199,11 @@ public class UserController {
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
             Integer offset = 0;
-            if (pageNumber > 1) {
-                offset = 20 * (pageNumber - 1);
+            if (page > 1) {
+                offset = 20 * (page - 1);
             }
-            List<PartnerReq> partnerReqList = userService.GetAllPartnerReq(offset);
-            return new ResponseEntity<>(partnerReqList, HttpStatus.OK);
+            List<PartnerAccount> partnerAccountList = userService.GetAllPartnerAccount(offset);
+            return new ResponseEntity<>(partnerAccountList, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
             map.put("error", e.toString());
