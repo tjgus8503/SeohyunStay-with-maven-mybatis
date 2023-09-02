@@ -26,7 +26,7 @@ public class HotelService {
             Map<String, String> map = new HashMap<>();
             UUID uuid = UUID.randomUUID();
             hotel.setId(uuid.toString());
-            hotel.setUserId(userId);
+            hotel.setPartnerId(userId);
             if (image == null) {
                 hotel.setImageUrl(null);
             } else {
@@ -47,7 +47,11 @@ public class HotelService {
 
     public Hotel GetHotel(String id) throws Exception {
         try{
-            return hotelMapper.findOneById(id);
+            Hotel result = hotelMapper.findOneById(id);
+            if (result == null) {
+                throw new Exception("failed 해당 호텔을 찾을 수 없습니다.");
+            }
+            return result;
         } catch (Exception e){
             throw new Exception(e);
         }
@@ -76,10 +80,10 @@ public class HotelService {
     }
 
     @Transactional
-    public Map<String, String> DeleteHotel(String id) throws Exception {
+    public Map<String, String> DeleteHotel(Hotel hotel) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = hotelMapper.delete(id);
+            int result = hotelMapper.delete(hotel);
             if (result == 0) {
                 throw new Exception("failed");
             }

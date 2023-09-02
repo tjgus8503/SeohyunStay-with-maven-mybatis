@@ -8,6 +8,9 @@ import seohyun.app.seohyunstay.mapper.*;
 import seohyun.app.seohyunstay.model.*;
 import seohyun.app.seohyunstay.utils.ImageFile;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +25,11 @@ public class RoomService {
     private final ImageFile imageFile;
 
     @Transactional
-    public Map<String, String> CreateRoom(Room room, String userId, MultipartFile[] image) throws Exception {
+    public Map<String, String> CreateRoom(Room room, MultipartFile[] image) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             UUID uuid = UUID.randomUUID();
             room.setId(uuid.toString());
-            room.setUserId(userId);
             if (image == null) {
                 room.setImageUrl(null);
             } else {
@@ -48,7 +50,11 @@ public class RoomService {
 
     public Room GetRoom(String id) throws Exception {
         try{
-            return roomMapper.findOneById(id);
+            Room result = roomMapper.findOneById(id);
+            if (result == null) {
+                throw new Exception("failed 방을 찾을 수 없습니다.");
+            }
+            return result;
         } catch (Exception e){
             throw new Exception(e);
         }
@@ -77,10 +83,10 @@ public class RoomService {
     }
 
     @Transactional
-    public Map<String, String> DeleteRoom(String id) throws Exception {
+    public Map<String, String> DeleteRoom(Room room) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = roomMapper.delete(id);
+            int result = roomMapper.delete(room);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -101,12 +107,21 @@ public class RoomService {
     }
 
     @Transactional
-    public Map<String, String> CreateReservation(Reservation reservation, String userId) throws Exception {
+    public Map<String, String> CreateReservation(Reservation reservation, String userId, Room roomInfo, Hotel hotelInfo) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             UUID uuid = UUID.randomUUID();
             reservation.setId(uuid.toString());
             reservation.setUserId(userId);
+            reservation.setRoomName(roomInfo.getRoomName());
+            reservation.setHotelId(roomInfo.getHotelId());
+            reservation.setHotelName(hotelInfo.getHotelName());
+            // 방 이용가격 계산.
+            LocalDateTime reservedDate = reservation.getReservedDate().atStartOfDay();
+            LocalDateTime checkoutDate = reservation.getCheckoutDate().atStartOfDay();
+            int lengthOfStay = (int) Duration.between(reservedDate, checkoutDate).toDays();
+            Integer totalPrice = lengthOfStay * roomInfo.getPrice();
+            reservation.setPrice(totalPrice);
             int result = reservationMapper.create(reservation);
             if (result == 0) {
                 throw new Exception("failed");
@@ -146,9 +161,9 @@ public class RoomService {
     }
 
     @Transactional
-    public void AddCount(Reservation reservation) throws Exception {
+    public void AddCount(Reservation reservationInfo) throws Exception {
         try{
-            int result = roomMapper.addCount(reservation);
+            int result = roomMapper.addCount(reservationInfo);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -159,7 +174,11 @@ public class RoomService {
 
     public Reservation GetReservation(String id) throws Exception {
         try{
-            return reservationMapper.findOneById(id);
+            Reservation result =  reservationMapper.findOneById(id);
+            if (result == null) {
+                throw new Exception("failed 해당 예약건이 없습니다.");
+            }
+            return result;
         } catch (Exception e){
             throw new Exception(e);
         }
@@ -182,10 +201,10 @@ public class RoomService {
     }
 
     @Transactional
-    public Map<String, String> Checkin(String id, String userId, Long price) throws Exception {
+    public Map<String, String> Checkin(Reservation reservation) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = reservationMapper.checkin(id, userId, price);
+            int result = reservationMapper.checkin(reservation);
             if (result == 0) {
                 throw new Exception("failed");
             }
@@ -197,10 +216,10 @@ public class RoomService {
     }
 
     @Transactional
-    public Map<String, String> Checkout(String id, String userId) throws Exception {
+    public Map<String, String> Checkout(Reservation reservation) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
-            int result = reservationMapper.checkout(id, userId);
+            int result = reservationMapper.checkout(reservation);
             if (result == 0) {
                 throw new Exception("failed");
             }

@@ -59,7 +59,7 @@ public class HotelController {
             String decoded = jwt.VerifyToken(authorization);
             Hotel hotelInfo = hotelService.GetHotel(hotel.getId());
             User userInfo = userService.findUserId(decoded);
-            if (!(hotelInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
+            if (!(hotelInfo.getPartnerId().equals(decoded) || userInfo.getRole() == 3)) {
                 map.put("result", "failed 수정 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
@@ -84,18 +84,18 @@ public class HotelController {
     // 호텔 삭제(호텔을 등록한 파트너 본인 또는 관리자(role=3)만 삭제할 수 있다.)
     @PostMapping("/deletehotel")
     public ResponseEntity<Object> DeleteHotel(
-            @RequestHeader String authorization, @RequestParam String id
+            @RequestHeader String authorization, @RequestBody Hotel hotel
     ) throws Exception {
         try{
             Map<String, String> map = new HashMap<>();
             String decoded = jwt.VerifyToken(authorization);
-            Hotel hotelInfo = hotelService.GetHotel(id);
+            Hotel hotelInfo = hotelService.GetHotel(hotel.getId());
             User userInfo = userService.findUserId(decoded);
-            if (!(hotelInfo.getUserId().equals(decoded) || userInfo.getRole() == 3)) {
+            if (!(hotelInfo.getPartnerId().equals(decoded) || userInfo.getRole() == 3)) {
                 map.put("result", "failed 삭제 권한이 없습니다.");
                 return new ResponseEntity<>(map, HttpStatus.OK);
             }
-            Map<String, String> delete = hotelService.DeleteHotel(id);
+            Map<String, String> delete = hotelService.DeleteHotel(hotel);
             new Thread() {
                 public void run() {
                     try{
@@ -106,7 +106,7 @@ public class HotelController {
                 }
             }.start();
             // 호텔 삭제 시, 해당 호텔에 소속된 방들도 모두 삭제.
-            roomService.DeleteRoomByHotelId(id);
+            roomService.DeleteRoomByHotelId(hotel.getId());
             return new ResponseEntity<>(delete, HttpStatus.OK);
         } catch (Exception e){
             Map<String, String> map = new HashMap<>();
@@ -118,12 +118,12 @@ public class HotelController {
     // 호텔 리스트 전체 조회
     @GetMapping("/getallhotel")
     public ResponseEntity<Object> GetAllHotel(
-            @RequestParam Integer pageNumber
+            @RequestParam Integer page
     ) throws Exception {
         try{
             Integer offset = 0;
-            if (pageNumber > 1) {
-                offset = 20 * (pageNumber - 1);
+            if (page > 1) {
+                offset = 20 * (page - 1);
             }
             List<Hotel> hotelList = hotelService.GetAllHotel(offset);
             return new ResponseEntity<>(hotelList, HttpStatus.OK);

@@ -13,12 +13,16 @@ import java.time.LocalDateTime;
 public class Reservation {
     private String id;
     private String userId;
+    private String username;
+    private String phone;
+    private Integer userNumber;
     private String roomId;
+    private String roomName;
     private String hotelId;
-    private LocalDate startedAt;
-    private LocalDate endedAt;
-    private Long count;
-    private LocalDateTime checkin;
-    private LocalDateTime checkout;
-    private Long price;
+    private String hotelName;
+    private LocalDate reservedDate;
+    private LocalDate checkoutDate;
+    private String checkin;
+    private String checkout;
+    private Integer price;
 }
