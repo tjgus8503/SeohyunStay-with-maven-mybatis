@@ -22,6 +22,7 @@ public class Reservation {
     private String hotelName;
     private LocalDate reservedDate;
     private LocalDate checkoutDate;
+    //todo
     private String checkin;
     private String checkout;
     private Integer price;
